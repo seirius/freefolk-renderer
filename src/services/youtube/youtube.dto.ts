@@ -8,6 +8,29 @@ export interface IVideoItem {
     author: string;
 }
 
+export interface IListArgs {
+    ids: string[];
+    part?: string;
+}
+
+export interface IListResponse {
+    videos: IVideoItem[];
+}
+
+export interface IPlaylistArgs {
+    id: string;
+    pageToken: string;
+    maxResults: number;
+}
+
+export interface IPlaylistResponse {
+    nextPageToken?: string;
+    prevPageToken?: string;
+    totalResults: number;
+    resultPerPage: number;
+    videos: IVideoItem[];
+}
+
 export interface ISearchArgs {
     q: string;
     maxResults?: number;
@@ -21,3 +44,4 @@ export interface ISearchResponse {
     resultsPerPage: number;
     videos: IVideoItem[];
 }
+

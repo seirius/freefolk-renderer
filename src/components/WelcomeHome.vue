@@ -1,54 +1,104 @@
 <template>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <form @submit="search">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="search"
-                                aria-describedby="searchHelp"
-                                placeholder="Search for a video o paste it's url"
-                                v-model="searchValue"
-                            />
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-outline-secondary">
-                                    <span v-bind:class="{'d-none': loadingSearch}">Search</span>
-                                    <span v-bind:class="{'d-none': !loadingSearch}" class="spinner-border spinner-border-sm"></span>
-                                </button>
+    <div class="home-container">
+        <div class="search container">
+            <div class="row">
+                <div class="col-12">
+                    <form @submit="search">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input
+                                    autofocus
+                                    type="text"
+                                    class="form-control"
+                                    id="search"
+                                    aria-describedby="searchHelp"
+                                    placeholder="Search or paste a youtube link"
+                                    v-model="searchInputValue"
+                                />
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-outline-secondary">
+                                        <span v-bind:class="{'d-none': loadingSearch}">Search</span>
+                                        <span
+                                            v-bind:class="{'d-none': !loadingSearch}"
+                                            class="spinner-border spinner-border-sm"
+                                        ></span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="search-result container-fluid" ref="searchResult">
+            <div class="row">
+                <div
+                    v-for="videoItem in videos"
+                    v-bind:key="videoItem.id"
+                    class="video-item-container col-12 col-sm-6 col-md-3 col-lg-2"
+                >
+                    <div class="card-group">
+                        <VideoItem :videoItem="videoItem" />
                     </div>
-                </form>
-
+                </div>
+            </div>
+            <div class="row" v-bind:class="{'d-none': this.videos.length === 0}">
+                <div class="col-2"></div>
+                <div class="col-8">
+                    <div class="btn btn-outline-primary btn-block" :disabled="this.loadingSearch" @click="search()">Load more</div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import VideoItem from "./VideoItem.vue";
+import { Component, Vue } from "vue-property-decorator";
 import Axios from "axios";
 import { YoutubeService } from "./../services/youtube/youtube.service";
+import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
 
-@Component
+@Component({
+    components: {
+        VideoItem
+    }
+})
 export default class WelcomeHome extends Vue {
-
     searchValue = "";
+    searchInputValue = "";
     loadingSearch = false;
+    videos: IVideoItem[] = [];
+    pageToken?: string;
+    totalResults?: number;
 
-    async search (event: Event) {
+    async search(event?: Event) {
+        if (this.searchValue !== this.searchInputValue) {
+            this.searchValue = this.searchInputValue;
+            this.videos = [];
+            this.pageToken = undefined;
+            this.totalResults = 0;
+        }
+        if (this.isSearchEmpty()) {
+            return;
+        }
         this.loadingSearch = true;
         try {
-            event.preventDefault();
-            const searchResponse = await YoutubeService.search({
-                q: this.searchValue,
-                maxResults: 10
+            if (event) {
+                event.preventDefault();
+            }
+            const {
+                videos,
+                nextPageToken,
+                totalResults
+            } = await YoutubeService.resolveUserSearch({
+                text: this.searchValue,
+                maxResults: 20,
+                pageToken: this.pageToken
             });
-            console.log(searchResponse);
+            this.videos.push(...videos.filter((video) => !this.videos.find(v => v.id === video.id)));
+            this.pageToken = nextPageToken;
+            this.totalResults = totalResults;
         } catch (error) {
             alert(error.message);
         } finally {
@@ -56,17 +106,43 @@ export default class WelcomeHome extends Vue {
         }
     }
 
-    isSearchLoading () {
-        return {
-
-        }
+    isSearchEmpty(): boolean {
+        return !this.searchValue || !this.searchValue.trim();
     }
 
-    mounted () {
+    mounted() {
+        const { searchResult }: {[key: string]: any} = this.$refs;
+        searchResult.onscroll = () => {
+            const bottomOfWindow =
+                searchResult.scrollHeight - searchResult.offsetHeight ===
+                searchResult.scrollTop;
+
+            if (bottomOfWindow) {
+                if (!this.loadingSearch) {
+                    this.search();
+                }
+            }
+        };
     }
 
 }
 </script>
 
 <style lang="scss">
+.home-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    .search {
+    }
+    .search-result {
+        height: 100%;
+        overflow: auto;
+        .video-item-container {
+            padding-bottom: 10px;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+    }
+}
 </style>

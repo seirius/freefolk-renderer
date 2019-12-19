@@ -4,6 +4,7 @@ import router from "./router";
 import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./../style/darkly.css";
+import "./../style/main.scss";
 
 Vue.config.productionTip = false;
 

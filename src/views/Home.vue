@@ -17,6 +17,9 @@ export default {
 </script>
 
 <style lang="scss">
+    html, body, #app, .home {
+        height: 100%;
+    }
     .home {
         padding-top: 10px;
     }
