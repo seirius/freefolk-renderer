@@ -1,4 +1,4 @@
-import { ISearchArgs, ISearchResponse, IListArgs, IListResponse, IPlaylistArgs, IPlaylistResponse, IVideoItem } from './youtube.dto';
+import { ISearchArgs, ISearchResponse, IListArgs, IListResponse, IPlaylistArgs, IPlaylistResponse, IVideoItem } from "./youtube.dto";
 import Axios from "axios";
 
 export class YoutubeService {

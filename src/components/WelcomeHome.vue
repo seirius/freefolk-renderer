@@ -1,11 +1,15 @@
 <template>
     <div class="home-container">
+        <DownloadList @close="closeList" :open="openList" :downloadingList="downloadingList" />
         <div class="search container">
             <div class="row">
                 <div class="col-12">
                     <form @submit="search">
                         <div class="form-group">
                             <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <button type="button" class="btn btn-outline-info" @click="list"><i class="fa fa-download"></i></button>
+                                </div>
                                 <input
                                     autofocus
                                     type="text"
@@ -17,7 +21,7 @@
                                 />
                                 <div class="input-group-append">
                                     <button type="submit" class="btn btn-outline-secondary">
-                                        <span v-bind:class="{'d-none': loadingSearch}">Search</span>
+                                        <span v-bind:class="{'d-none': loadingSearch}"><i class="fa fa-search"></i></span>
                                         <span
                                             v-bind:class="{'d-none': !loadingSearch}"
                                             class="spinner-border spinner-border-sm"
@@ -38,7 +42,7 @@
                     class="video-item-container col-12 col-sm-6 col-md-3 col-lg-2"
                 >
                     <div class="card-group">
-                        <VideoItem :videoItem="videoItem" />
+                        <VideoItem :videoItem="videoItem" @download="startDownload($event, videoItem)" />
                     </div>
                 </div>
             </div>
@@ -58,10 +62,14 @@ import { Component, Vue } from "vue-property-decorator";
 import Axios from "axios";
 import { YoutubeService } from "./../services/youtube/youtube.service";
 import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
+import DownloadList from "./DownloadList.vue";
+import { IVideoItemWState, EVideoState, EDownloadType } from "../services/youtube/youtube.dto";
+import { DownloadService } from "./../services/download/download.service";
 
 @Component({
     components: {
-        VideoItem
+        VideoItem,
+        DownloadList,
     }
 })
 export default class WelcomeHome extends Vue {
@@ -71,6 +79,8 @@ export default class WelcomeHome extends Vue {
     videos: IVideoItem[] = [];
     pageToken?: string;
     totalResults?: number;
+    openList = false;
+    downloadingList: IVideoItemWState[] = [];
 
     async search(event?: Event) {
         if (this.searchValue !== this.searchInputValue) {
@@ -110,6 +120,38 @@ export default class WelcomeHome extends Vue {
         return !this.searchValue || !this.searchValue.trim();
     }
 
+    list(): void {
+        this.openList = !this.openList;
+    }
+
+    closeList(): void {
+        this.openList = false;
+    }
+
+    async startDownload(type: EDownloadType, videoItem: IVideoItem): Promise<void> {
+        if (this.downloadingList.find(({type: t, item: {id}}) => t === type && id === videoItem.id)) {
+            this.list();
+        } else {
+            const args = {
+                ids: [videoItem.id],
+            };
+            if (type === EDownloadType.AUDIO) {
+                await DownloadService.startDownloadAudio({
+                    ids: [videoItem.id],
+                });
+            } else if (type === EDownloadType.VIDEO) {
+                await DownloadService.startDownload({
+                    ids: [videoItem.id],
+                });
+            }
+            this.downloadingList.unshift({
+                state: {value: EVideoState.INIT},
+                type,
+                item: videoItem,
+            });
+        }
+    }
+
     mounted() {
         const { searchResult }: {[key: string]: any} = this.$refs;
         searchResult.onscroll = () => {
@@ -133,8 +175,6 @@ export default class WelcomeHome extends Vue {
     display: flex;
     flex-direction: column;
     height: 100%;
-    .search {
-    }
     .search-result {
         height: 100%;
         overflow: auto;

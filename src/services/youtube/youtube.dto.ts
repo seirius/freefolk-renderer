@@ -45,3 +45,23 @@ export interface ISearchResponse {
     videos: IVideoItem[];
 }
 
+export enum EVideoState {
+    INIT = "init",
+    DOWNLOADING = "downloading",
+    CONVERTING = "converting",
+    READY = "ready"
+}
+
+export enum EDownloadType {
+    AUDIO = "audio",
+    VIDEO = "video"
+}
+
+export interface IVideoItemWState {
+    state: {
+        value: EVideoState;
+    },
+    type: EDownloadType;
+    item: IVideoItem;
+}
+

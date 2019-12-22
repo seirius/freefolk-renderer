@@ -1,13 +1,17 @@
 <template>
     <div v-if="videoItem" class="video-item">
         <div class="card">
-            <div class="video-title">
+            <div class="video-title" @click="options">
                 {{videoItem.title}}
             </div>
+            <div class="options" v-bind:class="{'d-none': !optionsState}">
+                <div class="btn-group">
+                    <button class="btn btn-outline-warning" @click="download('audio')">Audio</button>
+                    <button class="btn btn-outline-warning" @click="download('video')">Video</button>
+                    <button class="btn btn-outline-danger" @click="options"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
             <img class="card-img-top" v-bind:src="videoItem.thumbnailUrl" alt="thumbnail url"/>
-            <!-- <div class="card-body"> -->
-                <!-- <h6 class="card-title">{{videoItem.title}}</h6> -->
-            <!-- </div> -->
         </div>
     </div>
 </template>
@@ -20,6 +24,17 @@ import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.servi
 export default class VideoItem extends Vue {
     @Prop()
     videoItem!: IVideoItem;
+
+    optionsState = false;
+
+    options() {
+        this.optionsState = !this.optionsState;
+    }
+
+    download(type: "audio" | "video") {
+        this.$emit("download", type);
+        this.optionsState = false;
+    }
 
     mounted() {
     }
@@ -41,6 +56,15 @@ export default class VideoItem extends Vue {
                 background-color: rgba(5, 5, 5, 0.4);
                 overflow: hidden;
                 user-select: none;
+            }
+            .options {
+                position: absolute;
+                width: 100%;
+                height: 130px;
+                background-color: rgba(5, 5, 5, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             img {
                 object-fit: cover;

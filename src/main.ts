@@ -5,6 +5,7 @@ import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./../style/darkly.css";
 import "./../style/main.scss";
+import "font-awesome/css/font-awesome.min.css"
 
 Vue.config.productionTip = false;
 
