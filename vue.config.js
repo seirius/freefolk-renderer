@@ -1,4 +1,14 @@
 module.exports = {
+    chainWebpack: config => {
+        config.module
+            .rule('vue')
+            .use('vue-loader')
+            .loader('vue-loader')
+            .tap(options => {
+                options.hotReload = false
+                return options
+            })
+    },
     devServer: {
         proxy: {
             "/youtube": {
@@ -27,7 +37,16 @@ module.exports = {
                     "^/download": ""
                 },
                 logLevel: "debug"
-            }
+            },
+            "/websocket": {
+                target: "http://localhost:5000",
+                ws: true,
+                changeOrigin: true,
+                pathRewrite: {
+                    "^/websocket": "socket.io"
+                },
+                logLevel: "debug"
+            },
         }
     }
 }

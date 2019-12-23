@@ -65,6 +65,7 @@ import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.servi
 import DownloadList from "./DownloadList.vue";
 import { IVideoItemWState, EVideoState, EDownloadType } from "../services/youtube/youtube.dto";
 import { DownloadService } from "./../services/download/download.service";
+import { connect } from "socket.io-client";
 
 @Component({
     components: {
@@ -81,6 +82,7 @@ export default class WelcomeHome extends Vue {
     totalResults?: number;
     openList = false;
     downloadingList: IVideoItemWState[] = [];
+    socket!: SocketIOClient.Socket;
 
     async search(event?: Event) {
         if (this.searchValue !== this.searchInputValue) {
@@ -153,6 +155,26 @@ export default class WelcomeHome extends Vue {
     }
 
     mounted() {
+        console.log(1);
+        const socket = connect({
+            path: "/websocket"
+        });
+        socket.on("download", (data: any) => {
+            const {id: incId, state, progress} = JSON.parse(data);
+            const item = this.downloadingList.find(({item: { id }}) => id === incId);
+            if (item) {
+                const {type} = item;
+                item.state.value = state;
+                if (progress !== undefined) {
+                    console.log(progress);
+                    item.progress = parseInt(progress);
+                }
+                if (state === "done") {
+                    item.progress = undefined;
+                }
+            }
+        });
+        socket.on("convert", (data: any) => console.log(data));
         const { searchResult }: {[key: string]: any} = this.$refs;
         searchResult.onscroll = () => {
             const bottomOfWindow =

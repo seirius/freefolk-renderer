@@ -63,5 +63,6 @@ export interface IVideoItemWState {
     },
     type: EDownloadType;
     item: IVideoItem;
+    progress?: number;
 }
 

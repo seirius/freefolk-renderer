@@ -12,6 +12,7 @@
                         <i class="fa fa-film"></i>
                     </span>
                     <span class="badge badge-warning">{{downloadItem.state.value}}</span>
+                    <span class="badge badge-warning" v-if="downloadItem.progress">{{downloadItem.progress}}</span>
                 </div>
             </div>
             <img

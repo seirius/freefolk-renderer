@@ -15,6 +15,7 @@
     "jquery": "^3.4.1",
     "js-file-download": "^0.4.9",
     "popper.js": "^1.16.0",
+    "socket.io-client": "^2.3.0",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
     "vue-property-decorator": "^8.3.0",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/bootstrap": "^4.3.1",
     "@types/jquery": "^3.3.31",
+    "@types/socket.io-client": "^1.4.32",
     "@vue/cli-plugin-babel": "^4.1.0",
     "@vue/cli-plugin-eslint": "^4.1.0",
     "@vue/cli-plugin-router": "^4.1.1",
