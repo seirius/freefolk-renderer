@@ -1,3 +1,5 @@
+import { EDownloadState } from '../download/download.dto';
+
 export interface IVideoItem {
     id: string;
     title: string;
@@ -45,24 +47,16 @@ export interface ISearchResponse {
     videos: IVideoItem[];
 }
 
-export enum EVideoState {
-    INIT = "init",
-    DOWNLOADING = "downloading",
-    CONVERTING = "converting",
-    READY = "ready"
-}
-
 export enum EDownloadType {
-    AUDIO = "audio",
-    VIDEO = "video"
+    MP3 = "mp3",
+    MP4 = "mp4"
 }
 
 export interface IVideoItemWState {
     state: {
-        value: EVideoState;
+        value: EDownloadState;
     },
     type: EDownloadType;
     item: IVideoItem;
-    progress?: number;
 }
 

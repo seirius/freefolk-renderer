@@ -12,7 +12,7 @@
                     <div class="container-fluid">
                         <div class="row">
                             <div class="download-items col-12 col-md-6 col-lg-3" v-for="downloadItem of downloadingList" :key="downloadItem.type + ':' + downloadItem.item.id">
-                                <DownloadItem :downloadItem="downloadItem"/>
+                                <DownloadItem :downloadItem="downloadItem" @clicked="downloadClicked($event)"/>
                             </div>
                         </div>
                     </div>
@@ -41,7 +41,7 @@ export default class DownloadList extends Vue {
     open = false;
 
     @Prop()
-    downloadingList!: IVideoItemWState;
+    downloadingList!: IVideoItemWState[];
 
     _open = false;
 
@@ -56,6 +56,10 @@ export default class DownloadList extends Vue {
 
         const $modal = $(this.modalElement);
         $modal.modal(options);
+    }
+
+    downloadClicked(item: IVideoItemWState): void {
+        this.$emit("downloadClicked", item);
     }
 
     get modalElement(): Element {
@@ -74,7 +78,7 @@ export default class DownloadList extends Vue {
         height: 95%;
     }
     .modal-body {
-        // max-height: calc(100% - 120px);
+        max-height: calc(100% - 120px);
         overflow-y: auto;
 
         .download-item {

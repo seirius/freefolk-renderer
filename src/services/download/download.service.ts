@@ -1,5 +1,6 @@
-import { IStartDownload, IStartDownloadResponse, IStartDownloadAudioResponse, IStartDownloadAudio } from "./download.dto";
+import { IStartDownload, IStartDownloadResponse, IStartDownloadAudioResponse, IStartDownloadAudio, IFinalStartDownload } from "./download.dto";
 import Axios from "axios";
+import { EDownloadType } from '../youtube/youtube.dto';
 
 export class DownloadService {
 
@@ -17,6 +18,14 @@ export class DownloadService {
             throw new Error(statusText);
         }
         return data;
+    }
+
+    public static async finalStartDownload({ids, playlistId, type}: IFinalStartDownload): Promise<void> {
+        if (type === EDownloadType.MP3) {
+            await DownloadService.startDownloadAudio({ids, playlistId});
+        } else {
+            await DownloadService.startDownload({ids, playlistId});
+        }
     }
 
 }

@@ -5,14 +5,20 @@
             <div class="options" @click="download">
                 <div class="top"></div>
                 <div class="bottom">
-                    <span class="badge badge-primary" v-if="downloadItem.type === 'audio'">
+                    <span class="badge badge-primary" v-if="downloadItem.type === 'mp3'">
                         <i class="fa fa-volume-up"></i>
                     </span>
-                    <span class="badge badge-primary" v-if="downloadItem.type === 'video'">
+                    <span class="badge badge-primary" v-if="downloadItem.type === 'mp4'">
                         <i class="fa fa-film"></i>
                     </span>
-                    <span class="badge badge-warning">{{downloadItem.state.value}}</span>
-                    <span class="badge badge-warning" v-if="downloadItem.progress">{{downloadItem.progress}}</span>
+                    <span class="badge" v-bind:class="{
+                        'badge-warning': ['downloading', 'converting'].includes(downloadItem.state.value),
+                        'badge-success': downloadItem.state.value === 'end',
+                        'badge-secondary': downloadItem.state.value === 'stand_by',
+                        'badge-primary': downloadItem.state.value === 'init',
+                        'badge-danger': downloadItem.state.value === 'error',
+                        'badge-info': downloadItem.state.value === 'erased'
+                    }">{{getStateText(downloadItem.state.value)}}</span>
                 </div>
             </div>
             <img
@@ -28,6 +34,7 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { FileManagerService } from "../services/filemanager/filemanager.service";
 import { IVideoItemWState, EDownloadType } from "../services/youtube/youtube.dto";
+import { EDownloadState, DownloadStateText } from "../services/download/download.dto";
 
 @Component
 export default class DownloadItem extends Vue {
@@ -35,8 +42,12 @@ export default class DownloadItem extends Vue {
     downloadItem!: IVideoItemWState;
 
     async download(): Promise<void> {
-        const {type, item: {id}} = this.downloadItem;
-        await FileManagerService.download(type === EDownloadType.AUDIO ? id + "_mp3" : id);
+        const {type, item: {id}, state: {value}} = this.downloadItem;
+        this.$emit("clicked", this.downloadItem);
+    }
+
+    getStateText(state: EDownloadState): string {
+        return DownloadStateText[state];
     }
 }
 </script>

@@ -1,6 +1,7 @@
 <template>
     <div class="home-container">
-        <DownloadList @close="closeList" :open="openList" :downloadingList="downloadingList" />
+        <Toasts @clickToast="clickToast" ref="toasts"/>
+        <DownloadList @close="closeList" :open="openList" :downloadingList="downloadingList" @downloadClicked="downloadClicked($event)" />
         <div class="search container">
             <div class="row">
                 <div class="col-12">
@@ -63,14 +64,19 @@ import Axios from "axios";
 import { YoutubeService } from "./../services/youtube/youtube.service";
 import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
 import DownloadList from "./DownloadList.vue";
-import { IVideoItemWState, EVideoState, EDownloadType } from "../services/youtube/youtube.dto";
+import { IVideoItemWState, EDownloadType } from "../services/youtube/youtube.dto";
 import { DownloadService } from "./../services/download/download.service";
 import { connect } from "socket.io-client";
+import { EDownloadState } from "../services/download/download.dto";
+import { FileManagerService } from "../services/filemanager/filemanager.service";
+import Toasts from "./Toasts.vue";
+import { IToast } from "../services/util/Toast.dto";
 
 @Component({
     components: {
         VideoItem,
         DownloadList,
+        Toasts,
     }
 })
 export default class WelcomeHome extends Vue {
@@ -126,6 +132,14 @@ export default class WelcomeHome extends Vue {
         this.openList = !this.openList;
     }
 
+    openAlwaysList(): void {
+        this.openList = true;
+    }
+
+    clickToast(toast: IToast): void {
+        this.openAlwaysList();
+    }
+
     closeList(): void {
         this.openList = false;
     }
@@ -137,44 +151,79 @@ export default class WelcomeHome extends Vue {
             const args = {
                 ids: [videoItem.id],
             };
-            if (type === EDownloadType.AUDIO) {
-                await DownloadService.startDownloadAudio({
-                    ids: [videoItem.id],
-                });
-            } else if (type === EDownloadType.VIDEO) {
-                await DownloadService.startDownload({
-                    ids: [videoItem.id],
-                });
-            }
+            await DownloadService.finalStartDownload({ids: [videoItem.id], type});
             this.downloadingList.unshift({
-                state: {value: EVideoState.INIT},
+                state: {value: EDownloadState.STAND_BY},
                 type,
                 item: videoItem,
+            });
+            this.toasts.addToast({
+                title: "Download started",
+                img: videoItem.thumbnailUrl,
+                message: "Open download list",
+                vault: {
+                    type: "start-download"
+                }
             });
         }
     }
 
+    get toasts(): Toasts {
+        return this.$refs.toasts as any;
+    }
+
+    async downloadClicked(item: IVideoItemWState): Promise<void> {
+        const {
+            state: {value},
+            item: {id},
+            type
+        } = item;
+        try {
+            if (value === EDownloadState.END) {
+                await FileManagerService.download(type === EDownloadType.MP3 ? id + "_mp3" : id);
+            } else if (value === EDownloadState.ERASED || value === EDownloadState.ERROR) {
+                await DownloadService.finalStartDownload({ids: [id], type});
+                item.state.value = EDownloadState.STAND_BY; 
+            }
+        } catch (error) {
+            console.error(error);
+            item.state.value = EDownloadState.ERROR;
+        }
+    }
+
     mounted() {
-        console.log(1);
         const socket = connect({
-            path: "/websocket"
+            path: "/websocket/",
         });
-        socket.on("download", (data: any) => {
-            const {id: incId, state, progress} = JSON.parse(data);
-            const item = this.downloadingList.find(({item: { id }}) => id === incId);
+        socket.on("progress", (data: any) => {
+            const {id: incId, state, type: incType, errorMessage} = JSON.parse(data);
+            const item = this.downloadingList
+                .find(({item: { id }, type}) => id === incId && incType === type);
             if (item) {
-                const {type} = item;
                 item.state.value = state;
-                if (progress !== undefined) {
-                    console.log(progress);
-                    item.progress = parseInt(progress);
-                }
-                if (state === "done") {
-                    item.progress = undefined;
+                if (state === EDownloadState.END) {
+                    this.toasts.addToast({
+                        title: "Download ready",
+                        img: item.item.thumbnailUrl,
+                        message: "Open download list",
+                        vault: {
+                            type: "download-ready"
+                        }
+                    });
                 }
             }
         });
-        socket.on("convert", (data: any) => console.log(data));
+        socket.on("file_state", (data: any) => {
+            const {id: incId, tags} = JSON.parse(data);
+            const [parsedId] = incId.split("_");
+            const parsedType = tags.includes("mp3") ? EDownloadType.MP3 : EDownloadType.MP4;
+            const finalType: EDownloadType = parsedType ? parsedType : EDownloadType.MP4;
+            const item = this.downloadingList
+                .find(({item: { id }, type}) => id === parsedId && finalType === type);
+            if (item) {
+                item.state.value = EDownloadState.ERASED;
+            }
+        });
         const { searchResult }: {[key: string]: any} = this.$refs;
         searchResult.onscroll = () => {
             const bottomOfWindow =

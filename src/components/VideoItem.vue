@@ -6,8 +6,8 @@
             </div>
             <div class="options" v-bind:class="{'d-none': !optionsState}">
                 <div class="btn-group">
-                    <button class="btn btn-outline-warning" @click="download('audio')">Audio</button>
-                    <button class="btn btn-outline-warning" @click="download('video')">Video</button>
+                    <button class="btn btn-outline-warning" @click="download('mp3')">Audio</button>
+                    <button class="btn btn-outline-warning" @click="download('mp4')">Video</button>
                     <button class="btn btn-outline-danger" @click="options"><i class="fa fa-times"></i></button>
                 </div>
             </div>
@@ -19,6 +19,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
+import { EDownloadType } from "../services/youtube/youtube.dto";
 
 @Component
 export default class VideoItem extends Vue {
@@ -31,7 +32,7 @@ export default class VideoItem extends Vue {
         this.optionsState = !this.optionsState;
     }
 
-    download(type: "audio" | "video") {
+    download(type: EDownloadType) {
         this.$emit("download", type);
         this.optionsState = false;
     }
