@@ -11,7 +11,7 @@ export class FileManagerService {
         if (status !== 200) {
             throw new Error(statusText);
         }
-        FileDownload(data, headers["x-suggested-filename"]);
+        FileDownload(data, atob(headers["x-suggested-filename-b64"]));
     }
 
 }
