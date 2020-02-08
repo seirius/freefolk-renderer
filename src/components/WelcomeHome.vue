@@ -186,7 +186,6 @@ export default class WelcomeHome extends Vue {
                 item.state.value = EDownloadState.STAND_BY; 
             }
         } catch (error) {
-            console.error(error);
             item.state.value = EDownloadState.ERROR;
         }
     }
