@@ -62,7 +62,7 @@ import VideoItem from "./VideoItem.vue";
 import { Component, Vue } from "vue-property-decorator";
 import Axios from "axios";
 import { YoutubeService } from "./../services/youtube/youtube.service";
-import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
+import { IVideoItem } from "./../services/youtube/youtube.dto";
 import DownloadList from "./DownloadList.vue";
 import { IVideoItemWState, EDownloadType } from "../services/youtube/youtube.dto";
 import { DownloadService } from "./../services/download/download.service";

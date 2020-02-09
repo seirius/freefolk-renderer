@@ -18,7 +18,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { IVideoItem } from "../../../freefolk-download/src/youtube/youtube.service";
+import { IVideoItem } from "./../services/youtube/youtube.dto";
 import { EDownloadType } from "../services/youtube/youtube.dto";
 
 @Component
