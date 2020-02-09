@@ -1,7 +1,12 @@
 <template>
     <div class="home-container">
-        <Toasts @clickToast="clickToast" ref="toasts"/>
-        <DownloadList @close="closeList" :open="openList" :downloadingList="downloadingList" @downloadClicked="downloadClicked($event)" />
+        <Toasts @clickToast="clickToast" ref="toasts" />
+        <DownloadList
+            @close="closeList"
+            :open="openList"
+            :downloadingList="downloadingList"
+            @downloadClicked="downloadClicked($event)"
+        />
         <div class="search container">
             <div class="row">
                 <div class="col-12">
@@ -9,7 +14,25 @@
                         <div class="form-group">
                             <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <button type="button" class="btn btn-outline-info" @click="list"><i class="fa fa-download"></i></button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-info"
+                                        @click="list"
+                                        title="Show download list"
+                                    >
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                                <div class="input-group-prepend">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-success"
+                                        v-bind:class="{active: autoDownload}"
+                                        @click="toggleAutodownload"
+                                        title="Start downloading when the item is ready"
+                                    >
+                                        <i class="fa fa-check-circle"></i>
+                                    </button>
                                 </div>
                                 <input
                                     autofocus
@@ -22,7 +45,9 @@
                                 />
                                 <div class="input-group-append">
                                     <button type="submit" class="btn btn-outline-secondary">
-                                        <span v-bind:class="{'d-none': loadingSearch}"><i class="fa fa-search"></i></span>
+                                        <span v-bind:class="{'d-none': loadingSearch}">
+                                            <i class="fa fa-search"></i>
+                                        </span>
                                         <span
                                             v-bind:class="{'d-none': !loadingSearch}"
                                             class="spinner-border spinner-border-sm"
@@ -43,14 +68,21 @@
                     class="video-item-container col-12 col-sm-6 col-md-3 col-lg-2"
                 >
                     <div class="card-group">
-                        <VideoItem :videoItem="videoItem" @download="startDownload($event, videoItem)" />
+                        <VideoItem
+                            :videoItem="videoItem"
+                            @download="startDownload($event, videoItem)"
+                        />
                     </div>
                 </div>
             </div>
             <div class="row" v-bind:class="{'d-none': this.videos.length === 0}">
                 <div class="col-2"></div>
                 <div class="col-8">
-                    <div class="btn btn-outline-primary btn-block" :disabled="this.loadingSearch" @click="search()">Load more</div>
+                    <div
+                        class="btn btn-outline-primary btn-block"
+                        :disabled="this.loadingSearch"
+                        @click="search()"
+                    >Load more</div>
                 </div>
             </div>
         </div>
@@ -64,7 +96,10 @@ import Axios from "axios";
 import { YoutubeService } from "./../services/youtube/youtube.service";
 import { IVideoItem } from "./../services/youtube/youtube.dto";
 import DownloadList from "./DownloadList.vue";
-import { IVideoItemWState, EDownloadType } from "../services/youtube/youtube.dto";
+import {
+    IVideoItemWState,
+    EDownloadType
+} from "../services/youtube/youtube.dto";
 import { DownloadService } from "./../services/download/download.service";
 import { connect } from "socket.io-client";
 import { EDownloadState } from "../services/download/download.dto";
@@ -76,7 +111,7 @@ import { IToast } from "../services/util/Toast.dto";
     components: {
         VideoItem,
         DownloadList,
-        Toasts,
+        Toasts
     }
 })
 export default class WelcomeHome extends Vue {
@@ -89,6 +124,7 @@ export default class WelcomeHome extends Vue {
     openList = false;
     downloadingList: IVideoItemWState[] = [];
     socket!: SocketIOClient.Socket;
+    autoDownload = FileManagerService.AUTO_DOWNLOAD;
 
     async search(event?: Event) {
         if (this.searchValue !== this.searchInputValue) {
@@ -114,7 +150,11 @@ export default class WelcomeHome extends Vue {
                 maxResults: 20,
                 pageToken: this.pageToken
             });
-            this.videos.push(...videos.filter((video) => !this.videos.find(v => v.id === video.id)));
+            this.videos.push(
+                ...videos.filter(
+                    video => !this.videos.find(v => v.id === video.id)
+                )
+            );
             this.pageToken = nextPageToken;
             this.totalResults = totalResults;
         } catch (error) {
@@ -122,6 +162,11 @@ export default class WelcomeHome extends Vue {
         } finally {
             this.loadingSearch = false;
         }
+    }
+
+    toggleAutodownload(): void {
+        this.autoDownload = !this.autoDownload;
+        FileManagerService.AUTO_DOWNLOAD = this.autoDownload;
     }
 
     isSearchEmpty(): boolean {
@@ -144,18 +189,28 @@ export default class WelcomeHome extends Vue {
         this.openList = false;
     }
 
-    async startDownload(type: EDownloadType, videoItem: IVideoItem): Promise<void> {
-        if (this.downloadingList.find(({type: t, item: {id}}) => t === type && id === videoItem.id)) {
+    async startDownload(
+        type: EDownloadType,
+        videoItem: IVideoItem
+    ): Promise<void> {
+        if (
+            this.downloadingList.find(
+                ({ type: t, item: { id } }) => t === type && id === videoItem.id
+            )
+        ) {
             this.list();
         } else {
             const args = {
-                ids: [videoItem.id],
+                ids: [videoItem.id]
             };
-            await DownloadService.finalStartDownload({ids: [videoItem.id], type});
+            await DownloadService.finalStartDownload({
+                ids: [videoItem.id],
+                type
+            });
             this.downloadingList.unshift({
-                state: {value: EDownloadState.STAND_BY},
+                state: { value: EDownloadState.STAND_BY },
                 type,
-                item: videoItem,
+                item: videoItem
             });
             this.toasts.addToast({
                 title: "Download started",
@@ -174,16 +229,21 @@ export default class WelcomeHome extends Vue {
 
     async downloadClicked(item: IVideoItemWState): Promise<void> {
         const {
-            state: {value},
-            item: {id},
+            state: { value },
+            item: { id },
             type
         } = item;
         try {
             if (value === EDownloadState.END) {
-                await FileManagerService.download(type === EDownloadType.MP3 ? id + "_mp3" : id);
-            } else if (value === EDownloadState.ERASED || value === EDownloadState.ERROR) {
-                await DownloadService.finalStartDownload({ids: [id], type});
-                item.state.value = EDownloadState.STAND_BY; 
+                await FileManagerService.download(
+                    type === EDownloadType.MP3 ? id + "_mp3" : id
+                );
+            } else if (
+                value === EDownloadState.ERASED ||
+                value === EDownloadState.ERROR
+            ) {
+                await DownloadService.finalStartDownload({ ids: [id], type });
+                item.state.value = EDownloadState.STAND_BY;
             }
         } catch (error) {
             item.state.value = EDownloadState.ERROR;
@@ -192,18 +252,33 @@ export default class WelcomeHome extends Vue {
 
     mounted() {
         const socket = connect({
-            path: "/websocket/",
+            path: "/websocket/"
         });
-        socket.on("progress", (data: any) => {
-            const {id: incId, state, type: incType, errorMessage} = JSON.parse(data);
-            const item = this.downloadingList
-                .find(({item: { id }, type}) => id === incId && incType === type);
+        socket.on("progress", async (data: any) => {
+            const {
+                id: incId,
+                state,
+                type: incType,
+                errorMessage
+            } = JSON.parse(data);
+            const item = this.downloadingList.find(
+                ({ item: { id }, type }) => id === incId && incType === type
+            );
             if (item) {
                 item.state.value = state;
                 if (state === EDownloadState.END) {
+                    const {
+                        item: { id, thumbnailUrl },
+                        type: itemType
+                    } = item;
+                    if (FileManagerService.AUTO_DOWNLOAD) {
+                        await FileManagerService.download(
+                            itemType === EDownloadType.MP3 ? id + "_mp3" : id
+                        );
+                    }
                     this.toasts.addToast({
                         title: "Download ready",
-                        img: item.item.thumbnailUrl,
+                        img: thumbnailUrl,
                         message: "Open download list",
                         vault: {
                             type: "download-ready"
@@ -213,17 +288,23 @@ export default class WelcomeHome extends Vue {
             }
         });
         socket.on("file_state", (data: any) => {
-            const {id: incId, tags} = JSON.parse(data);
+            const { id: incId, tags } = JSON.parse(data);
             const [parsedId] = incId.split("_");
-            const parsedType = tags.includes("mp3") ? EDownloadType.MP3 : EDownloadType.MP4;
-            const finalType: EDownloadType = parsedType ? parsedType : EDownloadType.MP4;
-            const item = this.downloadingList
-                .find(({item: { id }, type}) => id === parsedId && finalType === type);
+            const parsedType = tags.includes("mp3")
+                ? EDownloadType.MP3
+                : EDownloadType.MP4;
+            const finalType: EDownloadType = parsedType
+                ? parsedType
+                : EDownloadType.MP4;
+            const item = this.downloadingList.find(
+                ({ item: { id }, type }) =>
+                    id === parsedId && finalType === type
+            );
             if (item) {
                 item.state.value = EDownloadState.ERASED;
             }
         });
-        const { searchResult }: {[key: string]: any} = this.$refs;
+        const { searchResult }: { [key: string]: any } = this.$refs;
         searchResult.onscroll = () => {
             const bottomOfWindow =
                 searchResult.scrollHeight - searchResult.offsetHeight ===
@@ -236,7 +317,6 @@ export default class WelcomeHome extends Vue {
             }
         };
     }
-
 }
 </script>
 

@@ -3,6 +3,8 @@ import FileDownload from "js-file-download";
 
 export class FileManagerService {
 
+    public static AUTO_DOWNLOAD = true;
+
     public static async download(id: string): Promise<void> {
         const {data, status, statusText, headers} = await Axios.get(`filemanager/download/${id}`, {
             params: {erase: false},
