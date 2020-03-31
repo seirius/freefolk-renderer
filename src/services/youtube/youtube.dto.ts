@@ -11,8 +11,8 @@ export interface IVideoItem {
 }
 
 export interface IListArgs {
-    ids: string[];
-    part?: string;
+    id: string[];
+    part?: string[];
 }
 
 export interface IListResponse {

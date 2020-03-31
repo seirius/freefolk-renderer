@@ -4,7 +4,9 @@ import Axios from "axios";
 export class YoutubeService {
 
     public static async list(args: IListArgs): Promise<IListResponse> {
-        const {data, status, statusText} = await Axios.post("youtube/list", args);
+        const {data, status, statusText} = await Axios.get("youtube/list", {
+            params: args
+        });
         if (status !== 200) {
             throw new Error(statusText);
         }
@@ -12,7 +14,7 @@ export class YoutubeService {
     }
 
     public static async playlist(args: IPlaylistArgs): Promise<IPlaylistResponse> {
-        const { data, status, statusText } = await Axios.post("youtube/playlist", args);
+        const { data, status, statusText } = await Axios.get("youtube/playlist", { params: args });
         if (status !== 200) {
             throw new Error(statusText);
         }
@@ -20,7 +22,7 @@ export class YoutubeService {
     }
     
     public static async search(args: ISearchArgs): Promise<ISearchResponse> {
-        const {data, status, statusText} = await Axios.post("youtube/search", args);
+        const {data, status, statusText} = await Axios.get("youtube/search", { params: args });
         if (status !== 200) {
             throw new Error(statusText);
         }
@@ -28,7 +30,9 @@ export class YoutubeService {
     }
 
     public static async resolveUserSearch({text, pageToken, maxResults}: IResolveUserSearchArgs): Promise<IResolveUserSearchResponse> {
-        const {data, status, statusText} = await Axios.post("youtube/resolve-user-search", {text, pageToken, maxResults});
+        const {data, status, statusText} = await Axios.get("youtube/resolve-user-search", {
+            params: {text, pageToken, maxResults},
+        });
         if (status !== 200) {
             throw new Error(statusText);
         }
